@@ -50,6 +50,7 @@ export default defineConfig(({ command, mode }): UserConfig => {
     //       }
     //     : undefined,
     server: {
+      allowedHosts: [".ngrok-free.app", "localhost", "127.0.0.1"],
       headers: {
         // Don't cache the server response in dev mode
         "Cache-Control": "public, max-age=0",

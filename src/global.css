@@ -168,6 +168,8 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#09070f] text-white antialiased;
+    min-width: 320px;
+    color-scheme: dark;
   }
 }

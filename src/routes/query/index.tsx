@@ -1,11 +1,11 @@
-import { component$ } from '@builder.io/qwik';
-import type { DocumentHead } from '@builder.io/qwik-city';
-import { routeLoader$ } from '@builder.io/qwik-city';
+import { component$ } from "@builder.io/qwik";
+import type { DocumentHead } from "@builder.io/qwik-city";
+import { routeLoader$ } from "@builder.io/qwik-city";
 
-import { getReviewIps } from '~/lib/db/queries';
+import { getMagentoProductReviewSummary } from "~/lib/db/queries";
 
 export const useQueryData = routeLoader$(async () => {
-  return getReviewIps();
+  return getMagentoProductReviewSummary();
 });
 
 export default component$(() => {
@@ -22,11 +22,12 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: 'Query Results',
+  title: "Query Results",
   meta: [
     {
-      name: 'description',
-      content: 'Server-side MySQL query results rendered with Qwik routeLoader$.',
+      name: "description",
+      content:
+        "Server-side MySQL query results rendered with Qwik routeLoader$.",
     },
   ],
 };
