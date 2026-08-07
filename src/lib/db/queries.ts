@@ -7,63 +7,94 @@ import { magentoProductReviewStatus } from './schema';
 export type ReviewPresenceFilter = 'with' | 'without';
 
 export type ProductReviewRow = {
+  reviewId: number | null;
   sku: string | null;
   reviewer: string | null;
   title: string | null;
   detail: string | null;
   rating: string | null;
+  statusId: number | null;
   createdAt: Date | null;
 };
 
+type ReviewQueryRow = {
+  review_id: number | null;
+  sku: string | null;
+  reviewer: string | null;
+  title: string | null;
+  detail: string | null;
+  rating: string | null;
+  status_id: number | null;
+  created_at: Date | null;
+};
+
+const reviewSelectSql = `
+  SELECT
+    r.review_id,
+    p.sku,
+    rd.nickname AS reviewer,
+    rd.title,
+    rd.detail,
+    (
+      SELECT ROUND(AVG(v.value), 1)
+      FROM rating_option_vote v
+      WHERE v.review_id = r.review_id
+    ) AS rating,
+    r.status_id,
+    r.created_at
+  FROM catalog_product_entity p
+  INNER JOIN review r
+    ON r.entity_pk_value = p.entity_id
+    AND r.entity_id = (
+      SELECT entity_id
+      FROM review_entity
+      WHERE entity_code = 'product'
+    )
+  INNER JOIN review_detail rd
+    ON rd.review_id = r.review_id
+    AND rd.store_id <> 0
+`;
+
+function mapReviewRow(row: ReviewQueryRow): ProductReviewRow {
+  return {
+    reviewId: row.review_id,
+    sku: row.sku,
+    reviewer: row.reviewer,
+    title: row.title,
+    detail: row.detail,
+    rating: row.rating,
+    statusId: row.status_id,
+    createdAt: row.created_at,
+  };
+}
+
 export async function getProductReviewsBySku(sku: string) {
   const [rows] = await getMagentoPool().query<
-    Array<{
-      sku: string | null;
-      reviewer: string | null;
-      title: string | null;
-      detail: string | null;
-      rating: string | null;
-      created_at: Date | null;
-    }> &
-      RowDataPacket[]
+    Array<ReviewQueryRow> & RowDataPacket[]
   >(
-    `
-    SELECT
-      p.sku,
-      rd.nickname AS reviewer,
-      rd.title,
-      rd.detail,
-      (
-        SELECT ROUND(AVG(v.value), 1)
-        FROM rating_option_vote v
-        WHERE v.review_id = r.review_id
-      ) AS rating,
-      r.created_at
-    FROM catalog_product_entity p
-    INNER JOIN review r
-      ON r.entity_pk_value = p.entity_id
-      AND r.entity_id = (
-        SELECT entity_id
-        FROM review_entity
-        WHERE entity_code = 'product'
-      )
-    INNER JOIN review_detail rd
-      ON rd.review_id = r.review_id
-      AND rd.store_id <> 0
+    `${reviewSelectSql}
     WHERE p.sku = ?
     ORDER BY r.created_at DESC
     `,
     [sku],
   );
 
-  return rows.map((row) => ({
-    sku: row.sku,
-    reviewer: row.reviewer,
-    title: row.title,
-    detail: row.detail,
-    rating: row.rating,
-    createdAt: row.created_at,
-  }));
+  return rows.map(mapReviewRow);
+}
+
+export async function getReviewById(reviewId: string | number) {
+  const [rows] = await getMagentoPool().query<
+    Array<ReviewQueryRow> & RowDataPacket[]
+  >(
+    `${reviewSelectSql}
+    WHERE r.review_id = ?
+    ORDER BY r.created_at DESC
+    LIMIT 1
+    `,
+    [reviewId],
+  );
+
+  return rows[0] ? mapReviewRow(rows[0]) : null;
 }
 
 export function getMagentoProductReviewSummary(limit = 10) {
