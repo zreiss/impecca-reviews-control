@@ -113,10 +113,10 @@ export async function createReview(input: CreateReviewInput) {
       Array<{ store_id: number }> & RowDataPacket[]
     >(
       `SELECT s.store_id
-       FROM catalog_product_entity_website cpew
-       JOIN store_website sw ON sw.website_id = cpew.website_id
-       JOIN store s ON s.website_id = sw.website_id
-       WHERE cpew.entity_id = ? AND s.store_id IN (${siteIds.map(() => '?').join(',')}) AND s.is_active = 1`,
+       FROM catalog_product_website cpw
+       JOIN core_website sw ON sw.website_id = cpw.website_id
+       JOIN core_store s ON s.website_id = sw.website_id
+       WHERE cpw.product_id = ? AND s.store_id IN (${siteIds.map(() => '?').join(',')}) AND s.is_active = 1`,
       [entityPkValue, ...siteIds],
     );
     if (siteRows.length !== 1) {
@@ -139,6 +139,11 @@ export async function createReview(input: CreateReviewInput) {
     await conn.execute<ResultSetHeader>(
       `INSERT INTO review_detail (review_id, store_id, title, detail, nickname, customer_id) VALUES (?, ?, ?, ?, ?, NULL)`,
       [reviewId, storeId, input.title, input.detail, input.reviewer],
+    );
+
+    await conn.execute<ResultSetHeader>(
+      `INSERT INTO review_store (review_id, store_id) VALUES (?, ?), (?, ?)`,
+      [reviewId, 0, reviewId, storeId],
     );
 
     await conn.execute<ResultSetHeader>(
@@ -238,7 +243,7 @@ export async function getProductReviewsBySku(sku: string) {
     Array<ReviewQueryRow> & RowDataPacket[]
   >(
     `${reviewSelectSql}
-    WHERE p.sku = ?
+    WHERE RTRIM(p.sku) = ?
     ORDER BY r.created_at DESC
     `,
     [sku],
