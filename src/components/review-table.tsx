@@ -75,8 +75,9 @@ export const ReviewTable = component$<ReviewTableProps>(
           <table class="w-full min-w-[720px] border-separate border-spacing-0 text-left">
             <thead class="sticky top-0 z-10">
               <tr class="bg-[#141120] text-[10px] font-semibold tracking-[0.14em] text-zinc-500 uppercase">
-                <th class="w-16 border-b border-white/10 px-6 py-4">No.</th>
-                <th class="border-b border-white/10 px-4 py-4">Product SKU</th>
+                <th class="w-64 border-b border-white/10 px-4 py-4">
+                  Product SKU
+                </th>
                 <th class="w-24 border-b border-white/10 px-4 py-4">Reviews</th>
                 <th class="w-[32%] border-b border-white/10 px-4 py-4">
                   Rating
@@ -90,7 +91,7 @@ export const ReviewTable = component$<ReviewTableProps>(
               {startIndex > 0 && (
                 <tr aria-hidden="true">
                   <td
-                    colSpan={5}
+                    colSpan={4}
                     style={{
                       height: `${startIndex * ROW_HEIGHT}px`,
                       padding: 0,
@@ -114,9 +115,6 @@ export const ReviewTable = component$<ReviewTableProps>(
                     style={{ height: `${ROW_HEIGHT}px` }}
                     class="group transition-colors hover:bg-violet-400/[0.045]"
                   >
-                    <td class="border-b border-white/[0.06] px-6 py-5 font-mono text-xs text-zinc-600">
-                      {String(rowIndex + 1).padStart(2, "0")}
-                    </td>
                     <td class="border-b border-white/[0.06] px-4 py-5">
                       <div class="flex items-center gap-3">
                         {site ? (
@@ -162,7 +160,7 @@ export const ReviewTable = component$<ReviewTableProps>(
                         {row.sku ? (
                           <a
                             href={`/product/${encodeURIComponent(row.sku.trim())}`}
-                            class="font-mono text-sm font-medium text-zinc-200 underline-offset-4 transition hover:text-violet-300 hover:underline"
+                            class="min-w-0 flex-1 truncate font-mono text-sm font-medium text-zinc-200 underline-offset-4 transition hover:text-violet-300 hover:underline"
                           >
                             {row.sku.trim()}
                           </a>
@@ -203,7 +201,7 @@ export const ReviewTable = component$<ReviewTableProps>(
               {endIndex < totalRows && (
                 <tr aria-hidden="true">
                   <td
-                    colSpan={5}
+                    colSpan={4}
                     style={{
                       height: `${(totalRows - endIndex) * ROW_HEIGHT}px`,
                       padding: 0,

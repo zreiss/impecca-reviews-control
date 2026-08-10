@@ -37,7 +37,7 @@ async function onRequestGuard(req: RequestEventCommon) {
   if (allowedIps.length > 0) {
     const ip = req.clientConn.ip ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
     if (!ip || !allowedIps.includes(ip)) {
-      throw req.error(403, "Forbidden: your IP is not allowed");
+      throw req.error(500, "Internal Server Error");
     }
   }
   await auth.onRequest(req);

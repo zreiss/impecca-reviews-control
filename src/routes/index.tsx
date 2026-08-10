@@ -3,6 +3,7 @@ import type { DocumentHead } from "@builder.io/qwik-city";
 import { routeLoader$ } from "@builder.io/qwik-city";
 
 import { ReviewTable } from "~/components/review-table";
+import { SiteHeader } from "~/components/site-header";
 import {
   getAllMagentoProductReviewSummaries,
   type ReviewPresenceFilter,
@@ -15,7 +16,7 @@ export const useReviews = routeLoader$(async ({ query }) => {
     ? null
     : requestedFilter === "with" || requestedFilter === "without"
       ? requestedFilter
-      : null;
+      : "with";
 
   return {
     ...(await getAllMagentoProductReviewSummaries({
@@ -62,72 +63,29 @@ export default component$(() => {
       <div class="pointer-events-none absolute top-1/3 -right-56 h-[30rem] w-[30rem] rounded-full bg-fuchsia-600/10 blur-[120px]" />
 
       <div class="relative mx-auto w-full max-w-[1480px] px-4 py-5 sm:px-7 lg:px-10 lg:py-8">
-        <header class="flex items-center justify-between border-b border-white/10 pb-5">
-          <a
-            href="/"
-            class="flex items-center gap-3"
-            aria-label="Review Control home"
-          >
-            <span class="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-[0_0_28px_rgba(139,92,246,0.35)]">
-              <svg
-                viewBox="0 0 24 24"
-                class="h-5 w-5"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M5 5.5h14v10H9l-4 3v-13Z"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="m9.2 10.4 1.7 1.7 3.9-4"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </span>
-            <span>
-              <span class="block text-sm font-semibold tracking-wide">
-                Review Control
-              </span>
-              <span class="block text-[10px] font-medium tracking-[0.18em] text-violet-300/70 uppercase">
-                Impecca
-              </span>
-            </span>
-          </a>
+        <SiteHeader>
+          <form q:slot="actions" method="post" action="/auth/signout">
+            <button
+              type="submit"
+              class="rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition hover:border-red-400/40 hover:bg-red-400/10 hover:text-white"
+            >
+              Sign out
+            </button>
+          </form>
+        </SiteHeader>
 
-          <div class="flex items-center gap-2">
-            <form method="post" action="/auth/signout">
-              <button
-                type="submit"
-                class="rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition hover:border-red-400/40 hover:bg-red-400/10 hover:text-white"
-              >
-                Sign out
-              </button>
-            </form>
-          </div>
-        </header>
-
-        <section class="pt-10 pb-7 lg:flex lg:items-end lg:justify-between lg:pt-16 lg:pb-10">
+        <section class="pt-3 pb-6 lg:flex lg:items-end lg:justify-between lg:pt-4 lg:pb-7">
           <div>
-            <div class="mb-4 flex items-center gap-2 text-xs font-semibold tracking-[0.2em] text-violet-300 uppercase">
-              <span class="h-px w-7 bg-violet-400" />
+            <div class="mb-2 flex items-center gap-2 text-[10px] font-semibold tracking-[0.2em] text-violet-300 uppercase">
+              <span class="h-px w-5 bg-violet-400" />
               Product intelligence
             </div>
-            <h1 class="max-w-3xl text-4xl leading-[1.05] font-semibold tracking-[-0.04em] sm:text-5xl lg:text-6xl">
+            <h1 class="text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
               Reviews at a glance<span class="text-fuchsia-400">.</span>
             </h1>
-            <p class="mt-4 max-w-xl text-sm leading-6 text-zinc-400 sm:text-base">
-              A live view of product sentiment and review activity across the
-              catalog.
-            </p>
           </div>
 
-          <div class="mt-7 flex items-center gap-2 text-xs text-zinc-500 lg:mt-0 lg:pb-1">
+          <div class="mt-3 flex items-center gap-2 text-xs text-zinc-500 lg:mt-0 lg:pb-1">
             <span class="relative flex h-2 w-2">
               <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
               <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
@@ -137,11 +95,11 @@ export default component$(() => {
         </section>
 
         <section class="mb-5 grid gap-3 sm:grid-cols-3">
-          <div class="rounded-2xl border border-white/10 bg-white/[0.035] p-5 backdrop-blur-sm">
-            <p class="text-xs font-medium tracking-wide text-zinc-500 uppercase">
+          <div class="rounded-2xl border border-violet-400/15 bg-violet-500/[0.07] p-5 backdrop-blur-sm">
+            <p class="text-xs font-medium tracking-wide text-violet-300/70 uppercase">
               Products tracked
             </p>
-            <p class="mt-3 text-3xl font-semibold tracking-tight">
+            <p class="mt-3 text-3xl font-semibold tracking-tight text-violet-200">
               {numberFormatter.format(products)}
             </p>
           </div>

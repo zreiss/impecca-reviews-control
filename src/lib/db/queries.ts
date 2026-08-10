@@ -267,6 +267,34 @@ export async function getReviewById(reviewId: string | number) {
   return rows[0] ? mapReviewRow(rows[0]) : null;
 }
 
+export async function getProductReviewsPage({
+  limit = 500,
+  offset = 0,
+}: { limit?: number; offset?: number } = {}) {
+  const [countRows] = await getMagentoPool().query<
+    Array<{ total: number }> & RowDataPacket[]
+  >(
+    `SELECT COUNT(*) AS total
+     FROM (
+       ${reviewSelectSql}
+     ) AS all_reviews
+    `,
+  );
+  const total = Number(countRows[0]?.total ?? 0);
+
+  const [rows] = await getMagentoPool().query<
+    Array<ReviewQueryRow> & RowDataPacket[]
+  >(
+    `${reviewSelectSql}
+    ORDER BY r.created_at DESC, r.review_id DESC
+    LIMIT ? OFFSET ?
+    `,
+    [limit, offset],
+  );
+
+  return { rows: rows.map(mapReviewRow), total };
+}
+
 export function getMagentoProductReviewSummary(limit = 10) {
   return getDb().select().from(magentoProductReviewStatus).limit(limit);
 }
@@ -322,7 +350,7 @@ export async function getAllMagentoProductReviewSummaries({
     .select({
       products: count(),
       reviews: sql<number>`coalesce(sum(${magentoProductReviewStatus.reviewCount}), 0)`,
-      averageRating: sql<string>`coalesce(avg(${magentoProductReviewStatus.ratingAverage}), 0)`,
+      averageRating: sql<string>`coalesce(avg(case when ${magentoProductReviewStatus.ratingAverage} > 0 then ${magentoProductReviewStatus.ratingAverage} end), 0)`,
     })
     .from(magentoProductReviewStatus)
     .where(where);

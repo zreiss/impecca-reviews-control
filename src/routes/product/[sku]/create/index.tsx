@@ -3,6 +3,7 @@ import type { DocumentHead } from "@builder.io/qwik-city";
 import { Form, routeAction$, routeLoader$ } from "@builder.io/qwik-city";
 
 import { createReview } from "~/lib/db/queries";
+import { SiteHeader } from "~/components/site-header";
 
 function nowDatetimeLocal(): string {
   const value = new Date();
@@ -90,51 +91,15 @@ export default component$(() => {
       <div class="pointer-events-none absolute top-1/3 -right-56 h-[30rem] w-[30rem] rounded-full bg-fuchsia-600/10 blur-[120px]" />
 
       <div class="relative mx-auto w-full max-w-[1080px] px-4 py-5 sm:px-7 lg:px-10 lg:py-8">
-        <header class="flex items-center justify-between border-b border-white/10 pb-5">
+        <SiteHeader>
           <a
-            href="/"
-            class="flex items-center gap-3"
-            aria-label="Review Control home"
-          >
-            <span class="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-[0_0_28px_rgba(139,92,246,0.35)]">
-              <svg
-                viewBox="0 0 24 24"
-                class="h-5 w-5"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M5 5.5h14v10H9l-4 3v-13Z"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="m9.2 10.4 1.7 1.7 3.9-4"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </span>
-            <span>
-              <span class="block text-sm font-semibold tracking-wide">
-                Review Control
-              </span>
-              <span class="block text-[10px] font-medium tracking-[0.18em] text-violet-300/70 uppercase">
-                Impecca
-              </span>
-            </span>
-          </a>
-
-          <a
+            q:slot="actions"
             href={`/product/${encodeURIComponent(sku)}`}
             class="rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition hover:border-violet-400/40 hover:bg-violet-400/10 hover:text-white"
           >
             Back to product
           </a>
-        </header>
+        </SiteHeader>
 
         <section class="pt-10 pb-7 lg:pt-14 lg:pb-9">
           <div class="mb-4 flex items-center gap-2 text-xs font-semibold tracking-[0.2em] text-violet-300 uppercase">
