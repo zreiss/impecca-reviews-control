@@ -41,6 +41,9 @@ lerna-debug.log*
 .yarn/*
 !.yarn/releases
 
+# Vercel
+.vercel
 
-.nx/cache
-.nx/workspace-data.playwright-mcp/
+# Tooling artifacts
+.nx/
+.playwright-mcp/

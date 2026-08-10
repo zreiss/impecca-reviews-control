@@ -100,12 +100,16 @@ export default component$(() => {
             </span>
           </a>
 
-          <a
-            href="/query"
-            class="rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition hover:border-violet-400/40 hover:bg-violet-400/10 hover:text-white"
-          >
-            Query playground
-          </a>
+          <div class="flex items-center gap-2">
+            <form method="post" action="/auth/signout">
+              <button
+                type="submit"
+                class="rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition hover:border-red-400/40 hover:bg-red-400/10 hover:text-white"
+              >
+                Sign out
+              </button>
+            </form>
+          </div>
         </header>
 
         <section class="pt-10 pb-7 lg:flex lg:items-end lg:justify-between lg:pt-16 lg:pb-10">
