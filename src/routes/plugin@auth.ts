@@ -8,6 +8,7 @@ const auth = QwikAuth$(() => ({
   pages: {
     signIn: "/login",
   },
+  trustHost: true,
   providers: [
     Credentials({
       credentials: {
