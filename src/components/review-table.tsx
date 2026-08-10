@@ -1,5 +1,6 @@
 import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
 import type { ReviewSummaryRow } from "~/lib/db/queries";
+import { getSite, siteSearchUrl } from "~/lib/sites";
 
 const ROW_HEIGHT = 74;
 const OVERSCAN = 6;
@@ -104,6 +105,8 @@ export const ReviewTable = component$<ReviewTableProps>(
                   5,
                   Math.max(0, Number(row.ratingAverage)),
                 );
+                const site = getSite(row.siteId);
+                const externalUrl = siteSearchUrl(site, row.sku);
 
                 return (
                   <tr
@@ -116,27 +119,46 @@ export const ReviewTable = component$<ReviewTableProps>(
                     </td>
                     <td class="border-b border-white/[0.06] px-4 py-5">
                       <div class="flex items-center gap-3">
-                        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.04] text-violet-300 transition group-hover:border-violet-400/30 group-hover:bg-violet-400/10">
-                          <svg
-                            viewBox="0 0 24 24"
-                            class="h-4 w-4"
-                            fill="none"
-                            aria-hidden="true"
+                        {site ? (
+                          <a
+                            href={externalUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            title={`Open ${site.name} store`}
+                            class="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] transition group-hover:border-violet-400/30 group-hover:bg-violet-400/10"
                           >
-                            <path
-                              d="m4.5 8 7.5-4 7.5 4-7.5 4-7.5-4Z"
-                              stroke="currentColor"
-                              stroke-width="1.5"
-                              stroke-linejoin="round"
+                            <img
+                              src={site.favicon}
+                              alt={site.name}
+                              width="16"
+                              height="16"
+                              loading="lazy"
+                              class="h-5 w-5 object-contain"
                             />
-                            <path
-                              d="m4.5 8v8l7.5 4 7.5-4V8M12 12v8"
-                              stroke="currentColor"
-                              stroke-width="1.5"
-                              stroke-linejoin="round"
-                            />
-                          </svg>
-                        </span>
+                          </a>
+                        ) : (
+                          <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.04] text-violet-300 transition group-hover:border-violet-400/30 group-hover:bg-violet-400/10">
+                            <svg
+                              viewBox="0 0 24 24"
+                              class="h-4 w-4"
+                              fill="none"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="m4.5 8 7.5-4 7.5 4-7.5 4-7.5-4Z"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                                stroke-linejoin="round"
+                              />
+                              <path
+                                d="m4.5 8v8l7.5 4 7.5-4V8M12 12v8"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                                stroke-linejoin="round"
+                              />
+                            </svg>
+                          </span>
+                        )}
                         {row.sku ? (
                           <a
                             href={`/product/${encodeURIComponent(row.sku.trim())}`}

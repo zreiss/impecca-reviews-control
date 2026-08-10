@@ -3,6 +3,8 @@ import type { DocumentHead } from "@builder.io/qwik-city";
 import { routeLoader$ } from "@builder.io/qwik-city";
 
 import { getProductReviewsBySku } from "~/lib/db/queries";
+import { getSite, siteSearchUrl } from "~/lib/sites";
+import { SiteIcon } from "~/components/site-icon";
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "2-digit",
@@ -21,6 +23,8 @@ export const useProductReviews = routeLoader$(async ({ params }) => {
 export default component$(() => {
   const data = useProductReviews();
   const { sku, reviews } = data.value;
+  const site = getSite(reviews[0]?.siteId);
+  const externalUrl = siteSearchUrl(site, sku);
 
   return (
     <main class="relative min-h-screen overflow-hidden bg-[#09070f] text-white">
@@ -66,12 +70,15 @@ export default component$(() => {
             </span>
           </a>
 
-          <a
-            href="/"
-            class="rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition hover:border-violet-400/40 hover:bg-violet-400/10 hover:text-white"
-          >
-            Back to dashboard
-          </a>
+          <div class="flex items-center gap-2">
+            <SiteIcon site={site} sku={sku} />
+            <a
+              href="/"
+              class="rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition hover:border-violet-400/40 hover:bg-violet-400/10 hover:text-white"
+            >
+              Back to dashboard
+            </a>
+          </div>
         </header>
 
         <section class="pt-10 pb-7 lg:pt-14 lg:pb-9">
@@ -86,6 +93,26 @@ export default component$(() => {
             {reviews.length} customer review{reviews.length === 1 ? "" : "s"}{" "}
             for this SKU
           </p>
+          {externalUrl && (
+            <a
+              href={externalUrl}
+              target="_blank"
+              rel="noreferrer"
+              class="mt-4 inline-block rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition hover:border-violet-400/40 hover:bg-violet-400/10 hover:text-white"
+            >
+              View on {site?.name}
+            </a>
+          )}
+          <a
+            href={
+              reviews[0]?.entityPkValue
+                ? `/product/${encodeURIComponent(sku)}/create?entityPkValue=${reviews[0].entityPkValue}`
+                : `/product/${encodeURIComponent(sku)}/create`
+            }
+            class="mt-4 inline-block rounded-lg bg-violet-500 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-violet-400"
+          >
+            Add review
+          </a>
         </section>
 
         <section class="overflow-hidden rounded-2xl border border-white/10 bg-[#100d18]/90 shadow-2xl shadow-black/30">

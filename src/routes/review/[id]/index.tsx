@@ -3,6 +3,8 @@ import type { DocumentHead } from "@builder.io/qwik-city";
 import { routeLoader$ } from "@builder.io/qwik-city";
 
 import { getReviewById } from "~/lib/db/queries";
+import { getSite, siteSearchUrl } from "~/lib/sites";
+import { SiteIcon } from "~/components/site-icon";
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "2-digit",
@@ -44,6 +46,8 @@ export default component$(() => {
   const productUrl = review.sku
     ? `/product/${encodeURIComponent(review.sku.trim())}`
     : "/";
+  const site = getSite(review.siteId);
+  const externalUrl = siteSearchUrl(site, review.sku);
 
   return (
     <main class="relative min-h-screen overflow-hidden bg-[#09070f] text-white">
@@ -89,12 +93,15 @@ export default component$(() => {
             </span>
           </a>
 
-          <a
-            href="/"
-            class="rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition hover:border-violet-400/40 hover:bg-violet-400/10 hover:text-white"
-          >
-            Back to dashboard
-          </a>
+          <div class="flex items-center gap-2">
+            <SiteIcon site={site} sku={review.sku} />
+            <a
+              href="/"
+              class="rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition hover:border-violet-400/40 hover:bg-violet-400/10 hover:text-white"
+            >
+              Back to dashboard
+            </a>
+          </div>
         </header>
 
         <section class="pt-10 pb-7 lg:pt-14 lg:pb-9">
@@ -112,6 +119,16 @@ export default component$(() => {
             >
               {review.sku ? `Product ${review.sku}` : "View product"}
             </a>
+            {externalUrl && (
+              <a
+                href={externalUrl}
+                target="_blank"
+                rel="noreferrer"
+                class="rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition hover:border-violet-400/40 hover:bg-violet-400/10 hover:text-white"
+              >
+                View on {site?.name}
+              </a>
+            )}
             <a
               href={`/review/${review.reviewId}/edit`}
               class="rounded-lg bg-violet-500 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-violet-400"

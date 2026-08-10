@@ -53,7 +53,7 @@ export default component$(() => {
   const liveSearch = useSignal(search);
   const query = liveSearch.value.trim().toLowerCase();
   const filteredRows = query
-    ? rows.filter((row) => row.sku?.toLowerCase().includes(query) ?? false)
+    ? rows.filter((row) => row.sku?.toLowerCase().replace(/-/g, "").includes(query.replace(/-/g, "")) ?? false)
     : rows;
 
   return (

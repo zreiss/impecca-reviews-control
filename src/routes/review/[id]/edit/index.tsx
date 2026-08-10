@@ -1,8 +1,8 @@
-import { component$ } from "@builder.io/qwik";
+import { component$, useSignal } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
 import { Form, routeAction$, routeLoader$ } from "@builder.io/qwik-city";
 
-import { getReviewById } from "~/lib/db/queries";
+import { getReviewById, saveReview } from "~/lib/db/queries";
 
 export const REVIEW_STATUSES = [
   { id: 1, label: "Approved" },
@@ -29,7 +29,7 @@ export const useReview = routeLoader$(async ({ params, status }) => {
 });
 
 export const useSaveReviewAction = routeAction$(async (form) => {
-  return {
+  const echo = {
     reviewer: String(form.reviewer ?? ""),
     title: String(form.title ?? ""),
     detail: String(form.detail ?? ""),
@@ -37,12 +37,49 @@ export const useSaveReviewAction = routeAction$(async (form) => {
     status: String(form.status ?? ""),
     createdAt: String(form.createdAt ?? ""),
   };
+
+  const reviewId = Number(form.reviewId);
+  const rating = Number(form.rating);
+  const statusId = Number(form.status);
+  const createdAt = form.createdAt ? new Date(String(form.createdAt)) : null;
+
+  if (!Number.isInteger(reviewId) || reviewId <= 0) {
+    return { ...echo, error: "Missing review id." };
+  }
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return { ...echo, error: "Rating must be a whole number from 1 to 5." };
+  }
+  if (!REVIEW_STATUSES.some((item) => item.id === statusId)) {
+    return { ...echo, error: "Invalid status." };
+  }
+  if (!createdAt || Number.isNaN(createdAt.getTime())) {
+    return { ...echo, error: "Invalid created date." };
+  }
+
+  try {
+    const result = await saveReview(reviewId, {
+      reviewer: echo.reviewer.trim(),
+      title: echo.title.trim(),
+      detail: echo.detail.trim(),
+      rating,
+      statusId,
+      createdAt,
+    });
+    return { ...echo, reviewId: result.reviewId };
+  } catch (error) {
+    return {
+      ...echo,
+      error:
+        error instanceof Error ? error.message : "Failed to save review.",
+    };
+  }
 });
 
 export default component$(() => {
   const reviewData = useReview();
   const review = reviewData.value;
   const saveAction = useSaveReviewAction();
+  const submitting = useSignal(false);
 
   const submitted = saveAction.value;
   const reviewer = submitted?.reviewer ?? review?.reviewer ?? "";
@@ -123,7 +160,30 @@ export default component$(() => {
           </section>
         ) : (
           <section class="overflow-hidden rounded-2xl border border-white/10 bg-[#100d18]/90 shadow-2xl shadow-black/30">
-            <Form action={saveAction} class="divide-y divide-white/[0.07]">
+            {saveAction.value?.error && (
+              <div class="border-b border-red-400/20 bg-red-500/10 px-6 py-3 text-sm text-red-300 sm:px-9">
+                {saveAction.value.error}
+              </div>
+            )}
+            {saveAction.value?.reviewId && (
+              <div class="border-b border-emerald-400/20 bg-emerald-500/10 px-6 py-3 text-sm text-emerald-300 sm:px-9">
+                Review #{saveAction.value.reviewId} saved to the database.
+              </div>
+            )}
+            <Form
+              action={saveAction}
+              onSubmit$={() => {
+                submitting.value = true;
+              }}
+              onKeyDown$={(event: KeyboardEvent) => {
+                const target = event.target as HTMLElement;
+                if (event.key === "Enter" && target.tagName === "INPUT") {
+                  event.preventDefault();
+                }
+              }}
+              class="divide-y divide-white/[0.07]"
+            >
+              <input type="hidden" name="reviewId" value={review?.reviewId ?? ""} />
               <div class="space-y-6 px-6 py-7 sm:px-9">
                 <div class="grid gap-6 sm:grid-cols-2">
                   <label class="block">
@@ -214,8 +274,8 @@ export default component$(() => {
 
               <div class="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-9">
                 <p class="text-xs text-zinc-500">
-                  Preview only — nothing is saved to the database. Submitting
-                  reloads the page with your edits on the form.
+                  Saves directly to the Magento database in a single
+                  transaction — updates the review, its detail, and the rating.
                 </p>
                 <div class="flex items-center gap-3">
                   <a
@@ -226,9 +286,10 @@ export default component$(() => {
                   </a>
                   <button
                     type="submit"
-                    class="rounded-xl bg-violet-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-400 focus:ring-2 focus:ring-violet-400/40 focus:outline-none"
+                    disabled={submitting.value}
+                    class="rounded-xl bg-violet-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-400 focus:ring-2 focus:ring-violet-400/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Reload with edits
+                    Save review
                   </button>
                 </div>
               </div>

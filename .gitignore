@@ -43,4 +43,4 @@ lerna-debug.log*
 
 
 .nx/cache
-.nx/workspace-data
+.nx/workspace-data.playwright-mcp/
