@@ -11,5 +11,9 @@ const funcDir = resolve(
 const vcConfigPath = join(funcDir, ".vc-config.json");
 const vcConfig = JSON.parse(await readFile(vcConfigPath, "utf8"));
 vcConfig.runtime = "nodejs20.x";
+if ("entrypoint" in vcConfig) {
+  vcConfig.handler = vcConfig.entrypoint;
+  delete vcConfig.entrypoint;
+}
 await writeFile(vcConfigPath, JSON.stringify(vcConfig, null, 2));
 console.log(`Patched ${vcConfigPath}: runtime -> ${vcConfig.runtime}`);
