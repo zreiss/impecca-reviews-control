@@ -58,7 +58,7 @@ export default component$(() => {
     : rows;
 
   return (
-    <main class="relative min-h-screen overflow-hidden bg-[#09070f] text-white">
+    <main class="relative min-h-screen overflow-x-clip bg-[#09070f] text-white">
       <div class="pointer-events-none absolute -top-52 left-1/3 h-[34rem] w-[34rem] rounded-full bg-violet-700/20 blur-[130px]" />
       <div class="pointer-events-none absolute top-1/3 -right-56 h-[30rem] w-[30rem] rounded-full bg-fuchsia-600/10 blur-[120px]" />
 

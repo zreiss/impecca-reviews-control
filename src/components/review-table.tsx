@@ -1,4 +1,5 @@
 import { component$, useSignal, useVisibleTask$ } from "@builder.io/qwik";
+import { useNavigate } from "@builder.io/qwik-city";
 import type { ReviewSummaryRow } from "~/lib/db/queries";
 import { getSite, siteSearchUrl } from "~/lib/sites";
 
@@ -22,6 +23,8 @@ export const ReviewTable = component$<ReviewTableProps>(
     const scrollTop = useSignal(0);
     const viewportHeight = useSignal(640);
     const scrollRef = useSignal<HTMLElement | undefined>(undefined);
+    const listRef = useSignal<HTMLElement | undefined>(undefined);
+    const nav = useNavigate();
 
     useVisibleTask$(({ cleanup }) => {
       const element = scrollRef.value;
@@ -50,7 +53,10 @@ export const ReviewTable = component$<ReviewTableProps>(
     const visibleRows = rows.slice(startIndex, endIndex);
 
     return (
-      <div class="overflow-hidden rounded-2xl border border-white/10 bg-[#100d18]/90 shadow-2xl shadow-black/30">
+      <div
+        ref={listRef}
+        class="sticky top-0 z-30 overflow-hidden rounded-2xl border border-white/10 bg-[#100d18]/90 shadow-2xl shadow-black/30"
+      >
         <div class="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-6">
           <div>
             <h2 class="text-sm font-semibold">Product review summary</h2>
@@ -67,6 +73,13 @@ export const ReviewTable = component$<ReviewTableProps>(
           ref={scrollRef}
           onScroll$={(_, element) => {
             scrollTop.value = element.scrollTop;
+            const list = listRef.value;
+            if (list) {
+              const top = list.getBoundingClientRect().top;
+              if (top > 0) {
+                window.scrollTo(0, window.scrollY + top);
+              }
+            }
           }}
           tabIndex={0}
           aria-label="Virtualized product review list"
@@ -113,7 +126,25 @@ export const ReviewTable = component$<ReviewTableProps>(
                   <tr
                     key={`${row.sku}-${rowIndex}`}
                     style={{ height: `${ROW_HEIGHT}px` }}
-                    class="group transition-colors hover:bg-violet-400/[0.045]"
+                    role="link"
+                    tabIndex={0}
+                    onClick$={() => {
+                      if (row.sku) {
+                        nav(`/product/${encodeURIComponent(row.sku.trim())}`);
+                      }
+                    }}
+                    onKeyDown$={(event, element) => {
+                      if (
+                        event.target === element &&
+                        (event.key === "Enter" || event.key === " ")
+                      ) {
+                        event.preventDefault();
+                        if (row.sku) {
+                          nav(`/product/${encodeURIComponent(row.sku.trim())}`);
+                        }
+                      }
+                    }}
+                    class="group cursor-pointer transition-colors hover:bg-violet-400/[0.045]"
                   >
                     <td class="border-b border-white/[0.06] px-4 py-5">
                       <div class="flex items-center gap-3">
@@ -160,6 +191,7 @@ export const ReviewTable = component$<ReviewTableProps>(
                         {row.sku ? (
                           <a
                             href={`/product/${encodeURIComponent(row.sku.trim())}`}
+                            onClick$={(event) => event.stopPropagation()}
                             class="min-w-0 flex-1 truncate font-mono text-sm font-medium text-zinc-200 underline-offset-4 transition hover:text-violet-300 hover:underline"
                           >
                             {row.sku.trim()}
