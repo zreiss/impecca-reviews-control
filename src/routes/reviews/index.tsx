@@ -1,6 +1,6 @@
 import { component$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
-import { routeLoader$ } from "@builder.io/qwik-city";
+import { routeLoader$, useLocation } from "@builder.io/qwik-city";
 
 import { getProductReviewsPage } from "~/lib/db/queries";
 import { ReviewVirtualList } from "~/components/review-virtual-list";
@@ -33,6 +33,9 @@ const numberFormatter = new Intl.NumberFormat("en-US");
 export default component$(() => {
   const data = useReviewsPage();
   const { rows, total, page, totalPages } = data.value;
+  const location = useLocation();
+  const hashMatch = location.url.hash.match(/^#review-(\d+)$/);
+  const initialReviewId = hashMatch ? Number(hashMatch[1]) : null;
   const from = (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
 
@@ -58,7 +61,11 @@ export default component$(() => {
           </p>
         </section>
 
-        <ReviewVirtualList rows={rows} />
+        <ReviewVirtualList
+          rows={rows}
+          page={page}
+          initialReviewId={initialReviewId}
+        />
 
         <div class="flex flex-col gap-3 border-t border-white/10 py-4 sm:flex-row sm:items-center sm:justify-between">
           <p class="text-xs text-zinc-500">

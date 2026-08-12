@@ -89,8 +89,15 @@ export default component$(() => {
                 const rating = Math.min(5, Math.max(0, Number(review.rating)));
 
                 return (
-                  <li key={index} class="px-5 py-6 sm:px-7">
-                    <a href={`/review/${review.reviewId}`} class="group block">
+                  <li
+                    key={index}
+                    id={`review-${review.reviewId}`}
+                    class="scroll-mt-24 border border-transparent px-5 py-6 sm:px-7 target:border-violet-400/70 target:bg-violet-400/[0.06]"
+                  >
+                    <a
+                      href={`/review/${review.reviewId}?back=${encodeURIComponent(`/product/${encodeURIComponent(sku)}/`)}`}
+                      class="group block"
+                    >
                       <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <div class="flex items-center gap-2 text-xs text-zinc-500">
                           <span class="inline-flex items-center gap-1.5">

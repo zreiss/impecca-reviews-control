@@ -1,6 +1,6 @@
 import { component$, useSignal } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
-import { Form, routeAction$, routeLoader$ } from "@builder.io/qwik-city";
+import { Form, routeAction$, routeLoader$, useLocation } from "@builder.io/qwik-city";
 
 import { getReviewById, saveReview } from "~/lib/db/queries";
 import { SiteHeader } from "~/components/site-header";
@@ -29,7 +29,7 @@ export const useReview = routeLoader$(async ({ params, status }) => {
     : review;
 });
 
-export const useSaveReviewAction = routeAction$(async (form) => {
+export const useSaveReviewAction = routeAction$(async (form, event) => {
   const echo = {
     reviewer: String(form.reviewer ?? ""),
     title: String(form.title ?? ""),
@@ -43,6 +43,7 @@ export const useSaveReviewAction = routeAction$(async (form) => {
   const rating = Number(form.rating);
   const statusId = Number(form.status);
   const createdAt = form.createdAt ? new Date(String(form.createdAt)) : null;
+  const back = String(form.back ?? "");
 
   if (!Number.isInteger(reviewId) || reviewId <= 0) {
     return { ...echo, error: "Missing review id." };
@@ -57,6 +58,7 @@ export const useSaveReviewAction = routeAction$(async (form) => {
     return { ...echo, error: "Invalid created date." };
   }
 
+  let savedReviewId = 0;
   try {
     const result = await saveReview(reviewId, {
       reviewer: echo.reviewer.trim(),
@@ -66,7 +68,7 @@ export const useSaveReviewAction = routeAction$(async (form) => {
       statusId,
       createdAt,
     });
-    return { ...echo, reviewId: result.reviewId };
+    savedReviewId = result.reviewId;
   } catch (error) {
     return {
       ...echo,
@@ -74,6 +76,13 @@ export const useSaveReviewAction = routeAction$(async (form) => {
         error instanceof Error ? error.message : "Failed to save review.",
     };
   }
+
+  const target = back
+    ? back.includes("#")
+      ? back
+      : `${back}#review-${savedReviewId}`
+    : `/reviews/#review-${savedReviewId}`;
+  throw event.redirect(302, target);
 });
 
 export default component$(() => {
@@ -81,6 +90,12 @@ export default component$(() => {
   const review = reviewData.value;
   const saveAction = useSaveReviewAction();
   const submitting = useSignal(false);
+  const location = useLocation();
+  const back = location.url.searchParams.get("back");
+  const listHref = back ?? "/reviews/";
+  const detailHref = back
+    ? `/review/${review?.reviewId}?back=${encodeURIComponent(back)}`
+    : `/review/${review?.reviewId}`;
 
   const submitted = saveAction.value;
   const reviewer = submitted?.reviewer ?? review?.reviewer ?? "";
@@ -99,10 +114,17 @@ export default component$(() => {
         <SiteHeader>
           <a
             q:slot="actions"
-            href={`/review/${review?.reviewId}`}
+            href={detailHref}
             class="rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition hover:border-violet-400/40 hover:bg-violet-400/10 hover:text-white"
           >
             Back to review
+          </a>
+          <a
+            q:slot="actions"
+            href={listHref}
+            class="rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition hover:border-violet-400/40 hover:bg-violet-400/10 hover:text-white"
+          >
+            Back to list
           </a>
         </SiteHeader>
 
@@ -130,13 +152,9 @@ export default component$(() => {
                 {saveAction.value.error}
               </div>
             )}
-            {saveAction.value?.reviewId && (
-              <div class="border-b border-emerald-400/20 bg-emerald-500/10 px-6 py-3 text-sm text-emerald-300 sm:px-9">
-                Review #{saveAction.value.reviewId} saved to the database.
-              </div>
-            )}
             <Form
               action={saveAction}
+              reloadDocument
               onSubmit$={() => {
                 submitting.value = true;
               }}
@@ -149,6 +167,7 @@ export default component$(() => {
               class="divide-y divide-white/[0.07]"
             >
               <input type="hidden" name="reviewId" value={review?.reviewId ?? ""} />
+              <input type="hidden" name="back" value={back ?? ""} />
               <div class="space-y-6 px-6 py-7 sm:px-9">
                 <div class="grid gap-6 sm:grid-cols-2">
                   <label class="block">
@@ -244,7 +263,7 @@ export default component$(() => {
                 </p>
                 <div class="flex items-center gap-3">
                   <a
-                    href={`/review/${review.reviewId}`}
+                    href={detailHref}
                     class="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-zinc-300 transition hover:bg-white/[0.05] hover:text-white"
                   >
                     Cancel

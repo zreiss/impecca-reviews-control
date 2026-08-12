@@ -1,6 +1,6 @@
 import { component$ } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
-import { routeLoader$ } from "@builder.io/qwik-city";
+import { routeLoader$, useLocation } from "@builder.io/qwik-city";
 
 import { getReviewById } from "~/lib/db/queries";
 import { getSite, siteSearchUrl } from "~/lib/sites";
@@ -26,6 +26,11 @@ export const useReviewDetail = routeLoader$(async ({ params, status }) => {
 export default component$(() => {
   const data = useReviewDetail();
   const review = data.value;
+  const location = useLocation();
+  const back = location.url.searchParams.get("back");
+  const editHref = back
+    ? `/review/${review?.reviewId}/edit?back=${encodeURIComponent(back)}`
+    : `/review/${review?.reviewId}/edit`;
 
   if (!review) {
     return (
@@ -60,10 +65,10 @@ export default component$(() => {
           <SiteIcon q:slot="actions" site={site} sku={review.sku} />
           <a
             q:slot="actions"
-            href="/"
+            href={back ?? "/"}
             class="rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-zinc-300 transition hover:border-violet-400/40 hover:bg-violet-400/10 hover:text-white"
           >
-            Back to dashboard
+            Back to list
           </a>
         </SiteHeader>
 
@@ -93,7 +98,7 @@ export default component$(() => {
               </a>
             )}
             <a
-              href={`/review/${review.reviewId}/edit`}
+              href={editHref}
               class="rounded-lg bg-violet-500 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-violet-400"
             >
               Edit review
