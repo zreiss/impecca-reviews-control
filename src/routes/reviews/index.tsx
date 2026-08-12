@@ -34,8 +34,11 @@ export default component$(() => {
   const data = useReviewsPage();
   const { rows, total, page, totalPages } = data.value;
   const location = useLocation();
-  const hashMatch = location.url.hash.match(/^#review-(\d+)$/);
-  const initialReviewId = hashMatch ? Number(hashMatch[1]) : null;
+  const posParam = location.url.searchParams.get("pos");
+  const initialScrollTop =
+    posParam != null && Number.isFinite(Number(posParam))
+      ? Number(posParam)
+      : null;
   const from = (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
 
@@ -64,7 +67,7 @@ export default component$(() => {
         <ReviewVirtualList
           rows={rows}
           page={page}
-          initialReviewId={initialReviewId}
+          initialScrollTop={initialScrollTop}
         />
 
         <div class="flex flex-col gap-3 border-t border-white/10 py-4 sm:flex-row sm:items-center sm:justify-between">

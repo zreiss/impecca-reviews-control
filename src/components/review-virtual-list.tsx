@@ -27,11 +27,11 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 type ReviewVirtualListProps = {
   rows: ProductReviewRow[];
   page?: number;
-  initialReviewId?: number | null;
+  initialScrollTop?: number | null;
 };
 
 export const ReviewVirtualList = component$<ReviewVirtualListProps>(
-  ({ rows, page, initialReviewId }) => {
+  ({ rows, page, initialScrollTop }) => {
     const scrollTop = useSignal(0);
     const viewportHeight = useSignal(640);
     const scrollRef = useSignal<HTMLElement | undefined>(undefined);
@@ -73,22 +73,53 @@ export const ReviewVirtualList = component$<ReviewVirtualListProps>(
       cleanup(() => observer.disconnect());
     });
 
-    useTask$(({ track }) => {
-      track(() => initialReviewId);
-      if (initialReviewId == null) return;
+    useVisibleTask$(() => {
       const element = scrollRef.value;
       if (!element) return;
-      const index = rows.findIndex(
-        (row) => row.reviewId === initialReviewId,
-      );
-      if (index < 0) return;
 
-      let offset = 0;
-      for (let i = 0; i < index; i++) {
-        offset += measured[i] ?? DEFAULT_ROW_HEIGHT;
+      const hashMatch = window.location.hash.match(/^#review-(\d+)$/);
+      const targetId = hashMatch ? Number(hashMatch[1]) : null;
+      const index =
+        targetId != null
+          ? rows.findIndex((row) => row.reviewId === targetId)
+          : -1;
+
+      let offset: number | null = null;
+      if (initialScrollTop != null) {
+        offset = initialScrollTop;
+      } else if (index >= 0) {
+        offset = 0;
+        for (let i = 0; i < index; i++) {
+          offset += measured[i] ?? DEFAULT_ROW_HEIGHT;
+        }
       }
-      element.scrollTop = offset;
-      highlightId.value = initialReviewId;
+      if (offset != null) {
+        element.scrollTop = offset;
+      }
+
+      if (targetId == null || index < 0) return;
+
+      // Wait for the row to render (scroll restore triggers the window to
+      // shift), then center it inside the container.
+      let attempts = 0;
+      const center = () => {
+        attempts += 1;
+        if (attempts > 60) return; // give up; approximate scroll is close enough
+        const rowEl = element.querySelector(`tr[id="review-${targetId}"]`);
+        if (!rowEl) {
+          requestAnimationFrame(center);
+          return;
+        }
+        const rect = rowEl.getBoundingClientRect();
+        const contRect = element.getBoundingClientRect();
+        const rowCenter = rect.top - contRect.top + rect.height / 2;
+        element.scrollTop = Math.max(
+          0,
+          element.scrollTop + rowCenter - element.clientHeight / 2,
+        );
+        highlightId.value = targetId;
+      };
+      requestAnimationFrame(center);
     });
 
     useTask$(({ track, cleanup }) => {
@@ -225,24 +256,52 @@ export const ReviewVirtualList = component$<ReviewVirtualListProps>(
                     key={`${row.reviewId}-${rowIndex}`}
                     id={`review-${row.reviewId}`}
                     data-index={rowIndex}
-                    onClick$={() =>
+                    onClick$={(_, element) => {
+                      const container = scrollRef.value;
+                      const back = container
+                        ? backHref +
+                          (backHref.includes("?") ? "&" : "?") +
+                          "pos=" +
+                          Math.max(
+                            0,
+                            Math.round(
+                              container.scrollTop +
+                                (element.getBoundingClientRect().top -
+                                  container.getBoundingClientRect().top),
+                            ),
+                          )
+                        : backHref;
                       nav(
-                        `/review/${row.reviewId}?back=${encodeURIComponent(backHref)}`,
-                      )
-                    }
+                        `/review/${row.reviewId}?back=${encodeURIComponent(back)}`,
+                      );
+                    }}
                     onKeyDown$={(event, element) => {
                       if (
                         event.target === element &&
                         (event.key === "Enter" || event.key === " ")
                       ) {
+                        const container = scrollRef.value;
+                        const back = container
+                          ? backHref +
+                            (backHref.includes("?") ? "&" : "?") +
+                            "pos=" +
+                            Math.max(
+                              0,
+                              Math.round(
+                                container.scrollTop +
+                                  (element.getBoundingClientRect().top -
+                                    container.getBoundingClientRect().top),
+                              ),
+                            )
+                          : backHref;
                         nav(
-                          `/review/${row.reviewId}?back=${encodeURIComponent(backHref)}`,
+                          `/review/${row.reviewId}?back=${encodeURIComponent(back)}`,
                         );
                       }
                     }}
                     role="link"
                     tabIndex={0}
-                    class={`group cursor-pointer align-top transition-colors hover:bg-violet-400/[0.045] ${
+                    class={`group cursor-pointer align-top transition-colors hover:bg-violet-400/[0.045] target:border-y target:border-violet-500 target:bg-violet-500/[0.1] ${
                       row.reviewId === highlightId.value
                         ? "border-y border-violet-400/60 bg-violet-400/[0.12]"
                         : ""
