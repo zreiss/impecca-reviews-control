@@ -85,13 +85,13 @@ export const ReviewVirtualList = component$<ReviewVirtualListProps>(
           : -1;
 
       let offset: number | null = null;
-      if (initialScrollTop != null) {
-        offset = initialScrollTop;
-      } else if (index >= 0) {
+      if (index >= 0) {
         offset = 0;
         for (let i = 0; i < index; i++) {
           offset += measured[i] ?? DEFAULT_ROW_HEIGHT;
         }
+      } else if (initialScrollTop != null) {
+        offset = initialScrollTop;
       }
       if (offset != null) {
         element.scrollTop = offset;
@@ -104,7 +104,7 @@ export const ReviewVirtualList = component$<ReviewVirtualListProps>(
       let attempts = 0;
       const center = () => {
         attempts += 1;
-        if (attempts > 60) return; // give up; approximate scroll is close enough
+        if (attempts > 120) return; // give up; approximate scroll is close enough
         const rowEl = element.querySelector(`tr[id="review-${targetId}"]`);
         if (!rowEl) {
           requestAnimationFrame(center);
@@ -301,7 +301,7 @@ export const ReviewVirtualList = component$<ReviewVirtualListProps>(
                     }}
                     role="link"
                     tabIndex={0}
-                    class={`group cursor-pointer align-top transition-colors hover:bg-violet-400/[0.045] target:border-y target:border-violet-500 target:bg-violet-500/[0.1] ${
+                    class={`group cursor-pointer align-top outline-none transition-colors hover:bg-violet-400/[0.045] ${
                       row.reviewId === highlightId.value
                         ? "border-y border-violet-400/60 bg-violet-400/[0.12]"
                         : ""
